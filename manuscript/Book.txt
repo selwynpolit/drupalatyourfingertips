@@ -1,3 +1,4 @@
+chapter1.txt
 index.txt
 batch_queue.md
 chapter2.txt
