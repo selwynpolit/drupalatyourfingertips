@@ -1,9 +1,12 @@
+{sample: true}
+
 # Batch Processing and the Drupal Queue System
 
-
+This is the chapter about Batch processing
 
 ## Batch Processing Using the Batch API
 
+Let's start with the Batch Processing.
 
 ### Overview
 
