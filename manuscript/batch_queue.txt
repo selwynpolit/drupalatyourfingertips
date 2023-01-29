@@ -1,18 +1,6 @@
 # Batch Processing and the Drupal Queue System
 
 
-- [Batch Processing and the Drupal Queue System](#batch-processing-and-the-drupal-queue-system)
-  - [Batch Processing Using the Batch API](#batch-processing-using-the-batch-api)
-    - [Overview](#overview)
-    - [Using the Batch API with a form](#using-the-batch-api-with-a-form)
-    - [Using the Batch API from a controller](#using-the-batch-api-from-a-controller)
-    - [Using the Batch API with hook\_update](#using-the-batch-api-with-hook_update)
-    - [Important rules about functions when using Batch API](#important-rules-about-functions-when-using-batch-api)
-    - [Looking at the source](#looking-at-the-source)
-  - [Queue System](#queue-system)
-  - [Resources](#resources)
-
-
 
 ## Batch Processing Using the Batch API
 
