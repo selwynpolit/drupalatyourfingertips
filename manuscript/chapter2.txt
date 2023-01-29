@@ -1,4 +1,28 @@
 {sample: true}
+
+
+# Batch Processing and the Drupal Queue System
+
+
+## Batch Processing Using the Batch API
+
+
+### Overview
+
+The Batch API provides very useful functionality that let you do work by breaking it into pieces to avoid PHP timeouts, etc. Usually, you'll do this by creating a group of node id's to be processed and use the batch API to process those chunks of ids.
+
+In addition, you create a function to handle things once all the chunks are complete. You can also give the Batch API a bunch of work to do and have it figure out for itself when it is finished.
+
+Also, it's useful that the Batch API uses the Drupal Queue system, allowing it to pick up where it left off in case of problems.
+
+You can use the Batch API in controllers, forms, hook updates, and Drush commands. The implementation of each one is slightly different, as you can see in the examples.
+
+Most often you start a batch from a form where you fill in some options and click a button. In the case of a controller, the batch runs when the browser is pointed at a URL. Drush commands are typed in the terminal.
+
+Although it will be covered in more detail in the future, it is useful to know that there is now a batch builder: The BatchBuilder class for batch API  <https://www.drupal.org/node/2875389>. It provides a more streamlined object oriented approach to creating batches.
+
+
+
 # Chapter Two
 
 Writing in Markdown is easy! You can learn most of what you need to know with just a few examples.
