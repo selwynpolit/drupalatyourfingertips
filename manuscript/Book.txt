@@ -1,4 +1,3 @@
 chapter1.txt
-welcome.txt
 chapter2.txt
 
