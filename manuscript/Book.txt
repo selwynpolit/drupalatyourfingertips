@@ -17,5 +17,9 @@ learn.md
 links.md
 logging.md
 menus.md
+migrate.md
+modals.md
+nodes_n_fields.md
+off_the_island.md
 
 
