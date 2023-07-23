@@ -2,17 +2,6 @@
 # Batch Processing and the Drupal Queue System
 
 
-## Table of contents
-
-
-- TOC
-{:toc}
-
-
-
-
----
-
 ## Batch Processing Using the Batch API
 
 ### Overview

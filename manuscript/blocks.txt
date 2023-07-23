@@ -1,11 +1,5 @@
 # Blocks
 
-## Table of contents
-
-- TOC
-{:toc}
-
----
 
 Blocks are plugins, which are reusable pieces of code following design patterns. Plugins are also used to define views arguments, field formatters, field widgets, etc. The source files for blocks are found in each module's `/src/Plugin` directory.
 
