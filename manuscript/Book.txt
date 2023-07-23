@@ -2,4 +2,5 @@ Intro.txt
 blocks.txt
 bq.txt
 caching.txt
+composer.md
 
