@@ -7,4 +7,5 @@ config.md
 cron.md
 dates.md
 debugging.md
+development.md
 
