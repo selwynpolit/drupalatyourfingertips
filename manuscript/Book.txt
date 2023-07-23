@@ -13,4 +13,9 @@ entities.md
 forms.md
 general.md
 hooks.md
+learn.md
+links.md
+logging.md
+menus.md
+
 
