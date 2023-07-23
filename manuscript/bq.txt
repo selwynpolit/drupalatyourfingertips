@@ -37,7 +37,6 @@ if ($browser === FALSE) {
 ```
 
 Here is an explanation from the source of what it does:
-
 ```php
  * Process a Drupal batch by spawning multiple Drush processes.
  *
@@ -416,7 +415,6 @@ $node_to_update_dirt_contact_nid = self::getFirstRef($node_to_update, 'field_sf_
 The [source code for the Batch API](https://git.drupalcode.org/project/drupal/-/blob/10.1.x/core/includes/form.inc) is really well commented and worth reading.
 
 #### Passing parameters to the functions in a batch operation
-
 In this file <https://git.drupalcode.org/project/drupal/-/blob/10.1.x/core/includes/form.inc#L562-678>, there is an example batch that defines two operations that call `my_function_1` and `my_function_2`. Notice how parameters can be passed to my_function_1 separated by commas. From <https://git.drupalcode.org/project/drupal/blob/8.7.8/core/includes/form.inc#L570>:
 
 ```php
@@ -609,7 +607,6 @@ class EmailEventBase extends QueueWorkerBase implements ContainerFactoryPluginIn
   }
 }
 ```
-
 Then you'll need a cronEventProcessor which in annotation tells cron how often to run the job:
 
 ```php
