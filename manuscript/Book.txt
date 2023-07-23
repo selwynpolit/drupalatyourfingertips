@@ -4,4 +4,7 @@ bq.md
 caching.md
 composer.md
 config.md
+cron.md
+dates.md
+debugging.md
 
