@@ -529,7 +529,6 @@ Also see an example at <https://makedrupaleasy.com/articles/drupal-version-7-9-h
 ## Drupal l() is deprecated
 
 Deprecated
-{: .label .label-red }
 The l() method (lower case letter L) was a convenience wrapper for the link generator service's generate() method.
 So do this instead:
 
