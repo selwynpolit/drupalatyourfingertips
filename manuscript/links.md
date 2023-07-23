@@ -159,7 +159,7 @@ returns a `Drupal\Core\Field\FieldItemList` which is a list of fields so you the
 
 You can get the URL (for external links) and then just the text part.
 
-Note this doesn't work for internal links. Note also this slightly convoluted example has a reference field field_sf_contract_ref which has a link to another entity and the field_vendor_url-\>first()-\>getUrl() is the important part. Also note, this is a single-value field (not a multivalue field -- so the first() call may be a little disturbing to those who expect things to be a little clearer.)
+Note this doesn't work for internal links. Note also this slightly convoluted example has a reference field field_sf_contract_ref which has a link to another entity and the field_vendor_url-\>first()-\>getUrl() is the important part. Also note, this is a single-value field (not a multivalue field - so the first() call may be a little disturbing to those who expect things to be a little clearer.)
 
 ```php
 $vendor_url = $node->field_sf_contract_ref->entity->field_vendor_url->first()->getUrl();
@@ -300,7 +300,7 @@ $url_string = Url::fromRoute('<current>')->toString();
 
 ## Get current nid, node type and title
 
-There are two ways to retrieve the current node -- via the request or via the route
+There are two ways to retrieve the current node - via the request or via the route
 
 ```php
 $node = \Drupal::request()->attributes->get('node');
@@ -548,5 +548,5 @@ print render($project_link);
 
 * Good reference from 2017 for creating links in Drupal at <https://agaric.coop/blog/creating-links-code-drupal-8>
 
-* [#! code: Drupal 9: Programmatically Creating And Using URLs And Links, March 2022](https://www.hashbangcode.com/article/drupal-9-programmatically-creating-and-using-urls-and-links)
+* [Hashbang code: Drupal 9: Programmatically Creating And Using URLs And Links, March 2022](https://www.hashbangcode.com/article/drupal-9-programmatically-creating-and-using-urls-and-links)
 
