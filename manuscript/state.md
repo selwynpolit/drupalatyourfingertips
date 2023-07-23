@@ -47,7 +47,7 @@ Writing state data looks like this:
 ```
 In the screenshot below, you can see where this is stored in the `key_value` table. Notice that the collection column is set to \"state\" indicating these are State API values.
 
-![State API data in its table](./images/media/state_data1.png)
+![State API data in its table](resources/state_data1.png)
 
 
 ### Using Drush to read the State API
