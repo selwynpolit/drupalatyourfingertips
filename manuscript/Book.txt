@@ -8,4 +8,9 @@ cron.md
 dates.md
 debugging.md
 development.md
+email.md
+entities.md
+forms.md
+general.md
+hooks.md
 
