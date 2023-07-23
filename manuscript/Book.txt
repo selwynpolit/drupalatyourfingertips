@@ -21,5 +21,14 @@ migrate.md
 modals.md
 nodes_n_fields.md
 off_the_island.md
+queries.md
+redirects.md
+render.md
+routes.md
+services.md
+state.md
+taxonomy.md
+twig.md
+
 
 
