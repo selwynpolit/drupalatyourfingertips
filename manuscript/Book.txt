@@ -1,6 +1,7 @@
 Intro.txt
-blocks.txt
-bq.txt
-caching.txt
+blocks.md
+bq.md
+caching.md
 composer.md
+config.md
 
