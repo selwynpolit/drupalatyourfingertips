@@ -1,27 +1,8 @@
----
-layout: default
-title: Twig
-permalink: /twig
-last_modified_date: '2023-04-28'
-render_with_liquid: false
----
-
 # TWIG
-{: .no_toc .fw-500 }
-
-## Table of contents
-{: .no_toc .text-delta }
-
-- TOC
-{:toc}
-
-![views](https://api.visitor.plantree.me/visitor-badge/pv?label=views&color=informational&namespace=d9book&key=twig.md)
-
----
-
-Drupal 10 uses **Twig 3**. Drupal 9 uses Twig 2. Drupal 8 used Twig 1.
 
 ## Overview
+
+Drupal 10 uses **Twig 3**. Drupal 9 uses Twig 2. Drupal 8 used Twig 1.
 
 ### Theme System Overview
 
