@@ -97,6 +97,97 @@ To apply the patch:
 patch -p1 < ./patches/fix_scary_module.patch
 ```
 
+## Patch modules using patches on Drupal.org
+
+Patches can be applied by referencing them in the composer.json file, in the following format. [cweagans/composer-patches](https://github.com/cweagans/composer-patches) can then be used to apply the patches on any subsequent website builds.
+
+In order to install and manage patches using composer we need to require the "composer-patches" module: 
+
+```
+composer require cweagans/composer-patches
+```
+
+
+Examples of patches to core look like:
+
+```json
+  "extra": {
+    "patches": {
+      "drupal/core": {
+        "Add startup configuration for PHP server": "https://www.drupal.org/files/issues/add_a_startup-1543858-30.patch"
+      }
+    }
+  },
+```
+
+
+```json
+  "extra": {
+    "patches": {
+      "drupal/core": {
+        "Ignore front end vendor folders to improve directory search performance": "https://www.drupal.org/files/issues/ignore_front_end_vendor-2329453-116.patch"",
+        "My custom local patch": "./patches/drupal/some_patch-1234-1.patch"
+      }
+    }
+  },
+```
+
+Some developers like adding the actual link to the issue in the description like this:
+
+```json
+"extra": {
+  "patches": {
+      "drupal/core": {
+          "Views Exposed Filter Block not inheriting the display handlers cache tags, causing filter options not to appear, https://www.drupal.org/project/drupal/issues/3067937": "https://www.drupal.org/files/issues/2019-07-15/drupal-exposed_filter_block_cache_tags-3067937-4.patch",
+          "Cannot use relationship for rendered entity on Views https://www.drupal.org/project/drupal/issues/2457999": "https://www.drupal.org/files/issues/2021-05-13/9.1.x-2457999-267-views-relationship-rendered-entity.patch"
+      },
+```
+
+
+See [Drupal 9 and Composer Patches](https://vazcell.com/blog/how-apply-patch-drupal-9-composer)
+also [Managing patches with Composer](https://acquia.my.site.com/s/article/360048081193-Managing-patches-with-Composer)
+
+
+
+### Step by step 
+
+1. Find the issue and patch in the issue queue on Drupal.org
+2. Use the title and ID of the issue to be able to locate this post in the future. E.g. [Using an issue for the Gin admin theme](https://www.drupal.org/project/gin/issues/3188521) "Improve content form detection - 3188521" 
+3. Scroll down the issue to find the specific patch you want to apply e.g. for comment #8 grab the file link for `3188521-8.patch`.  It is [https://www.drupal.org/files/issues/2021-05-19/3188521-8.patch](https://www.drupal.org/files/issues/2021-05-19/3188521-8.patch)
+4. Add the module name, description and URL for the patch into the extra patches section of json:
+
+```json
+  "extra": {
+    "patches": {
+      "drupal/core": {
+        "Add startup configuration for PHP server": "https://www.drupal.org/files/issues/add_a_startup-1543858-30.patch"
+      },
+      "drupal/gin": {
+        "Improve content form detection - 3188521": "https://www.drupal.org/files/issues/2021-05-19/3188521-8.patch"
+      }
+    }
+  }
+
+```
+5. use `composer update --lock` to apply the patch and watch the output.
+
+
+If the patch was not applied or throws an error which is quite common (because they are no longer compatible), try using `-vvv` (verbose mode) flag with composer to see the reason: 
+
+```
+composer update -vvv
+```
+
+## Patches from a Gitlab merge request
+
+Using the URL of the merge request, add .patch at the end of the URL and that will be the path to the latest patch.
+
+e.g. for a merge request at [https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2](https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2) or [https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2/diffs?view=parallel](https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2/diffs?view=parallel)
+
+The patch is at [https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2.patch](https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2.patch)
+
+
+
 ## composer.json patches in separate file
 
 To separate patches into a different file other than composer json add
@@ -229,43 +320,58 @@ Package operations: 0 installs, 4 updates, 0 removals
 ## Version constraints
 
 1\. The caret constraint (`^`): this will allow any new versions
-except BREAKING ones---in other words, the first number in the version
-cannot increase, but the others can. `drupal/foo:^1.0` would allow
-anything greater than or equal to 1.0 but less than 2.0.x . If you need
+except BREAKING ones---in other words, the first number in the version
+cannot increase, but the others can. `drupal/foo:^1.0` would allow
+anything greater than or equal to 1.0 but less than 2.0.x. If you need
 to specify a version, this is the recommended method.
 
 2\. The tilde constraint (\~): this is a bit more restrictive than the
-caret constraint. It means composer can download a higher version of the
-last digit specified only. For example, drupal/foo:\~1.2 will allow
+caret constraint. It means composer can download a higher version of the
+last digit specified only. For example, drupal/foo:\~1.2 will allow
 anything greater than or equal to version 1.2 (i.e., 1.2.0, 1.3.0,
 1.4.0,...,1.999.999), but it won't allow that first 1 to increment to a
-2.x release. Likewise, drupal/foo:\~1.2.3 will allow anything from 1.2.3
+2.x release. Likewise, drupal/foo:\~1.2.3 will allow anything from 1.2.3
 to 1.2.999, but not 1.3.0.
 
 3\. The other constraints are a little more self-explanatory. You can
-specify a version range with operators, a specific stability level
-(e.g., -stable or -dev ), or even specify wildcards with \*.
+specify a version range with operators, a specific stability level
+(e.g., -stable or -dev ), or even specify wildcards with \*.
 
 Version range: By using comparison operators you can specify ranges of
-valid versions. Valid operators are \>, \>=, \<, \<=, !=.
+valid versions. Valid operators are \>, \>=, \<, \<=, !=.
 
-You can define multiple ranges. Ranges separated by a space ( ) or comma
-(,) will be treated as a logical AND. A double pipe (\|\|) will be
-treated as a logical OR. AND has higher precedence than OR.
+You can define multiple ranges. Ranges separated by a space ( ) or comma
+(,) will be treated as a logical AND. A double pipe (\|\|) will be
+treated as a logical OR. AND has higher precedence than OR.
 
-Note: Be careful when using unbounded ranges as you might end up
+Note: Be careful when using unbounded ranges as you might end up
 unexpectedly installing versions that break backwards compatibility.
-Consider using the caret operator instead for safety.
+Consider using the caret operator instead for safety.
 
 Examples:
 
-• \>=1.0
+- \>=1.0
 
-• \>=1.0 \<2.0
+- \>=1.0 \<2.0
 
-• \>=1.0 \<1.1 \|\| \>=1.2
+- \>=1.0 \<1.1 \|\| \>=1.2
 
 More at <https://getcomposer.org/doc/articles/versions.md>
+
+## Allowing multiple versions
+
+You can use double pipe (`||`) to specify multiple version. 
+
+For the [CSV serialization](https://www.drupal.org/project/csv_serialization) module the author recommends using the following to install the module:
+```
+composer require drupal/csv_serialization:^2.0 || ^3.0
+```
+
+They say: \"It is not possible to support both Drupal 9.x and 10.x in a single release of this module due to a breaking change in EncoderInterface::encode() between Symfony 4.4 (D9) and Symfony 6.2 (D10). When preparing for an upgrade to Drupal 10 we recommend that you widen your Composer version constraints to allow either 2.x or 3.x: `composer require drupal/csv_serialization:^2.0 || ^3.0.` This will allow the module to be automatically upgraded when you upgrade Drupal core.\"
+
+
+
+
 
 ## Troubleshooting
 
@@ -273,9 +379,11 @@ More at <https://getcomposer.org/doc/articles/versions.md>
 
 The `prohibits` command tells you which packages are blocking a given package from being installed. Specify a version constraint to verify whether upgrades can be performed in your project, and if not why not.
 
-Why won\'t composer install Drupal version 8.9.1.
+Why won\'t composer install Drupal version 8.9.1?
 
+```
 composer why-not drupal/core:8.9.1
+```
 
 ### The big reset button
 
@@ -301,10 +409,29 @@ $ ddev composer install
 
 ## Reference
 
--   Drupal 8 composer best practices (Jan 2018)
-    <https://www.lullabot.com/articles/drupal-8-composer-best-practices>
--   Making a patch (Dec 2022) <https://www.drupal.org/node/707484>
--   Composer Documentation <https://getcomposer.org/doc/>
--   Composer documentation article on versions and constraints <https://getcomposer.org/doc/articles/versions.md>
--   Using Drupal's Composer Scaffold updated Dec 2922 <https://www.drupal.org/docs/develop/using-composer/using-drupals-composer-scaffold#toc_6>
+- [Drupal 8 composer best practices - Jan 2018](https://www.lullabot.com/articles/drupal-8-composer-best-practices)
+- [Making a patch - Dec 2022](https://www.drupal.org/node/707484)
+- [Composer Documentation](https://getcomposer.org/doc/)
+- [Composer documentation article on versions and constraints](https://getcomposer.org/doc/articles/versions.md)
+- [Using Drupal's Composer Scaffold updated Dec 2022](https://www.drupal.org/docs/develop/using-composer/using-drupals-composer-scaffold#toc_6)
+- [Drupal 9 and Composer Patches by Adrian Vazquez Peligero June 2021](https://vazcell.com/blog/how-apply-patch-drupal-9-composer)
+- [Managing patches with Composer March 2022](https://acquia.my.site.com/s/article/360048081193-Managing-patches-with-Composer)
 
+
+---
+
+<script src="https://giscus.app/client.js"
+        data-repo="selwynpolit/d9book"
+        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjUxNTQ1Nzg="
+        data-category="Q&A"
+        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMjY2NDE4"
+        data-mapping="title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        async>
+</script>
