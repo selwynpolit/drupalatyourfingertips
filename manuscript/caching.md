@@ -25,6 +25,20 @@ function ddd_node_view_alter(array &$build, EntityInterface $entity, EntityViewD
 }
 ```
 
+
+## Disable caching on a route
+
+This will cause Drupal to rebuild the page internally on each page load but won't stop browsers or CDN's from caching. The line: `no_cache: TRUE` is all you need to disable caching for this route.
+
+```yaml
+requirements:
+  _permission: 'access content'
+options:
+  no_cache: TRUE
+```
+
+
+
 ## Don't cache data returned from a controller
 
 From dev1/web/modules/custom/rsvp/src/Controller/ReportController.php
@@ -65,7 +79,7 @@ function ddd_node_view_alter(array &$build, EntityInterface $entity, EntityViewD
 }
 ```
 
-## Considering caching when retrieving query, get or post parameters 
+## Considering caching when retrieving query, get or post parameters
 
 For get variables use:
 ```php
@@ -162,7 +176,7 @@ $build = [
   '#markup' => $sMarkup,        
   '#cache' => [
     'keys' => ['home-all','home'],
-    'tags'=> ['node_list'], // invalidate cache when any node content is added/changed etc.
+    'tags'=> ['node_list'], // invalidate cache when any nodes are added/changed etc.
     'max-age' => '36600', // invalidate cache after 10h
   ],
 ];
@@ -187,6 +201,27 @@ function filters_invalidate_vocabulary_cache_tag($vocab_id) {
 ```
 
 If you want this to work for nodes, you may be able to  just change `$vocab_id` for `$node_type`.
+
+### Invalidate a specific node
+
+In this function, we build a `$cache_tag` like \"node: 123\" and call `Cache:invalidateTags()` so Drupal will force a reload from the database for anything that depends on that node.
+
+
+```php
+use Drupal\Core\Cache\Cache;
+
+
+public function vote(array $options): void {
+  $this->load();
+  $voter_uid = $options['voter_uid'];
+  $vote_number = $options['vote_number'];
+  /** @var VotingRound $voting_round */
+  $voting_round = $this->votingRound[$vote_number];
+  $voting_round->vote($voter_uid, $options);
+  $cache_tag = 'node:' . $this->programNid;
+  Cache::invalidateTags([$cache_tag]);
+}
+```
 
 ## Setting cache keys in a block
 
@@ -398,11 +433,154 @@ Cache keys must only be set if the render array should be cached.
 
 There are more details at the link above
 
+## Caching your data for better performance
+
+For this use case, I need to store data gathered from multiple nodes in a cache so I can access it really quickly.  I load up an array of data in `$this->expectations` and store it in the cache.  This stores the array into a row of the `cache_default` table identified by a cache id.
+
+{: .note }
+To clear this data from cache, use `drush cr` or use the Drupal u/i (Configuration, Development, Performance and click clear all caches button). This will permanently erase each row of cached data from the `cache_default` table and the other `cache_*` tables.
+
+
+```php
+// Write data to the cache.
+$cache_id = "expectations.program.$this->programNid.vote.$this->voteNumber.publisher.$this->publisherNid";
+\Drupal::cache()->set($cache_id, $this->expectations, Cache::PERMANENT);
+// Read from the cache.
+$cache_data = \Drupal::cache()->get($cache_id);
+```
+Here are some rows in the `cache_default` table:
+![Cache row of data in cache_default table](resources/cached_data.png)
+
+Here is what the `$this->expectations` array looks like from the `data` field:
+![Contents of data field](resources/cache_longblob.png)
+
+Here is a complete function which loads data from the cache.  If the cache is empty, the data is rebuilt from nodes and then stored in the cache:
+
+```php
+  protected function loadExpectations() {
+    $cache_id = "expectations.program.$this->programNid.vote.$this->voteNumber.publisher.$this->publisherNid";
+    $cache_data = \Drupal::cache()->get($cache_id);
+    if (!$cache_data) {
+      // Retrieve expectation info for this team.
+      $expectation_nodes = Node::loadMultiple($this->expectationNids);
+      foreach ($expectation_nodes as $expectation_node) {
+        $expectation_nid = $expectation_node->id();
+        $this->expectations[$expectation_nid] = [
+          'nid' => $expectation_nid,
+          'pub_status' => $expectation_node->get('field_tks_expectation_pub_status')->value ?? 'error',
+          'kss_nid' => $expectation_node->get('field_tks_kss_parent_nid')->target_id,
+          'cfitem_nid' => $expectation_node->get('field_tks_expectation')->target_id,
+        ];
+      }
+      \Drupal::cache()->set($cache_id, $this->expectations, Cache::PERMANENT);
+      return;
+    }
+    $this->expectations = $cache_data->data;
+  }
+```
+
+Read more about the [Cache API](https://api.drupal.org/api/drupal/core!core.api.php/group/cache)
+
+### Invalidating caches
+
+Build an array of cache names (or cache_ids) and call `invalidateMultiple()`:
+
+```php
+  public function invalidateAllCaches() {
+    $citation_cache_id = "citations.program.$this->programNid.vote.$this->voteNumber.publisher.$this->publisherNid";
+    $correlation_cache_id = "correlations.program.$this->programNid.vote.$this->voteNumber.publisher.$this->publisherNid";
+    $expectation_cache_id = "expectations.program.$this->programNid.vote.$this->voteNumber.publisher.$this->publisherNid";
+    $cache_ids = [$citation_cache_id, $correlation_cache_id, $expectation_cache_id];
+    \Drupal::cache()->invalidateMultiple($cache_ids);
+  }
+```
+
+### Specify custom cache bins
+
+To specify your own cache bin e.g. \"voting\", pass the name of your cache bin to the `\Drupal::cache()` calls like this:
+
+```php
+$cache_id = "expectations.program.$this->programNid.vote.$this->voteNumber.publisher.$this->publisherNid";
+$cache_data = \Drupal::cache('voting')->get($cache_id);
+// And.
+\Drupal::cache('voting')->set($cache_id, $this->expectations, Cache::PERMANENT);
+```
+
+This does require an entry in your module.services.yml file.  e.g. in docroot/modules/custom/tea_teks/modules/tea_teks_voting/tea_teks_voting.services.yml:
+
+```yml
+services:
+  cache.voting:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: cache_factory:get
+    arguments: [voting]
+```
+
+Your data will be stored in a table called `cache_voting`.
+
+{: .note }
+To clear this data from cache, use `drush cr` or use the Drupal u/i (Configuration, Development, Performance and click clear all caches button). This will permanently erase each line of cached data from the various `cache_*` tables.
+
+From the [cache api](https://api.drupal.org/api/drupal/core!core.api.php/group/cache):
+
+**Cache bins**
+
+Cache storage is separated into \"bins\", each containing various cache items. Each bin can be configured separately; see Configuration.
+
+When you request a cache object, you can specify the bin name in your call to \Drupal::cache(). Alternatively, you can request a bin by getting service \"cache.nameofbin\" from the container. The default bin is called \"default\", with service name \"cache.default\", it is used to store common and frequently used caches.
+
+Other common cache bins are the following:
+
+`bootstrap`: Data needed from the beginning to the end of most requests, that has a very strict limit on variations and is invalidated rarely.
+`render`: Contains cached HTML strings like cached pages and blocks, can grow to large size.
+`data`: Contains data that can vary by path or similar context.
+`discovery`: Contains cached discovery data for things such as plugins, views_data, or YAML discovered data such as library info.
+
+A module can define a cache bin by defining a service in its modulename.services.yml file as follows (substituting the desired name for \"nameofbin\"):
+
+
+
+
+## Caching data so it doesn't get cleared by a cache rebuild
+
+Using the [Permanent Cache Bin module](https://www.drupal.org/project/pcb) you can put your cached data into a cache bin and have it survive cache clearing.  This can be really useful if you need some cached data to stay around while you are clearing Drupal's other caches.
+
+This requires an entry in your `module.services.yml` file.  e.g. in docroot/modules/custom/tea_teks/modules/tea_teks_voting/tea_teks_voting.services.yml.  Notice the `default_backend:` value which makes it permanent:
+
+
+```yml
+services:
+  cache.voting:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin, default_backend: cache.backend.permanent_database }
+    factory: cache_factory:get
+    arguments: [voting]
+```
+
+{: .note }
+Executing invalidate in code does **not** clear any caches that are using `cache.backend.permanent_database`.
+
+**F.A.Q**
+Now clearing caches leaves your cache_voting table intact.
+
+1. How to clear permanent cache through drush?
+   To clear permanent cache drush pcbf [bin] (e.g. `drush pcbf voting`)
+
+2. How to clear permanent cache programmatically?
+   `\Drupal::service('cache.voting')->deleteAllPermanent();`
+
+3. How to clear permanent cache through admin?
+   For each cache bin using pcb, there will be a button in Admin -> Development -> Performance page (admin/config/development/performance). Use them to clear cache for specific bins through Admin UI.
+
+
 ## Development Setup
 
 ### Disable caching and enable TWIG debugging
 
-Generally I enable twig debugging and disable caching while developing a site.  
+Generally I enable twig debugging and disable caching while developing a site.
 
 To enable TWIG debugging output in source, in sites/default/development.services.yml set twig.config debug:true.  See core.services.yml for lots of other items to change for development
 
@@ -433,7 +611,7 @@ to enable put this in settings.local.php:
  */
 $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml';
 ```
-You also need to disable the render cache in settings.local.php with: 
+You also need to disable the render cache in settings.local.php with:
 
 ```php
 $settings['cache']['bins']['render'] = 'cache.backend.null';
@@ -550,7 +728,7 @@ This was changed to:
 * First look for a specific bin definition in settings. E.g., `$settings['cache']['bins']['discovery']`
 * If not found, then use the the `default_backend` from the tag in the service definition.
 * If no `default_backend` for the specific bin was provided, then use the global default defined in settings. I.e., `$settings['cache']['default']`
-The old order resulted in unexpected behaviors, for example, the fast chained backend was no longer used when an alternative cache backend was set as default.
+  The old order resulted in unexpected behaviors, for example, the fast chained backend was no longer used when an alternative cache backend was set as default.
 
 The order has been changed, so that the cache bin services that explicitly set `default_backends` are always used unless explicitly overridden with a per-bin configuration. In core, this means, fast chained backend will be used for `bootstrap`, `config`, and `discovery` cache bins and `memory` backend will be used for the `static` cache bin, unless they are explicitly overridden in settings.
 
@@ -583,10 +761,10 @@ Fabian Franz in his article at <https://drupalsun.com/fabianx/2015/12/01/day-1-t
  ```
 
 {: .warning }
-Proceed with caution with the above as it seems that APCu may only suitable for single server setups. TODO: I couldn't find any references to using APCu with multi-server setups so I'm not sure if that is a safe configuration. 
+Proceed with caution with the above as it seems that APCu may only suitable for single server setups. TODO: I couldn't find any references to using APCu with multi-server setups so I'm not sure if that is a safe configuration.
 
 Pantheon docs ask in their FAQ Can APCu be used as a cache backend on Pantheon?
-Yes, APCu can be used as a cache backend or a "key-value store"; however, this is not recommended. APCu lacks the ability to span multiple application containers. Instead, Pantheon provides a Redis-based Object Cache as a caching backend for Drupal and WordPress, which has coherence across multiple application containers. This was from [Pantheon docs](https://docs.pantheon.io/apcu) FAQ's: 
+Yes, APCu can be used as a cache backend or a "key-value store"; however, this is not recommended. APCu lacks the ability to span multiple application containers. Instead, Pantheon provides a Redis-based Object Cache as a caching backend for Drupal and WordPress, which has coherence across multiple application containers. This was from [Pantheon docs](https://docs.pantheon.io/apcu) FAQ's:
 
 Drupal 8 has a so-called [fast-chained backend](https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21Cache%21ChainedFastBackend.php/class/ChainedFastBackend/9) as the default cache backend, which allows to store data directly on the web server while ensuring it is correctly synchronized across multiple servers. APCu is the user cache portion of APC (Advanced PHP Cache), which has served us well till PHP 5.5 got its own zend opcache. You can think of it as a key-value store that is stored in memory and the basic operations are apc_store($key, $data), apc_fetch($keys) and apc_delete($keys). For windows the equivalent on IIS would be WinCache (http://drupal.org/project/wincache).
 
@@ -612,14 +790,14 @@ APCu is the official replacement for the outdated APC extension. APC provided bo
 {: .note }
 APCu is not the same as apc!
 
-APCu support is built into Drupal Core. From this [Change record Sep 2014](https://www.drupal.org/node/2327507): 
+APCu support is built into Drupal Core. From this [Change record Sep 2014](https://www.drupal.org/node/2327507):
 
 In order to improve cache performance, Drupal 8 now has:
 
 A cache.backend.apcu service that site administrators can assign as the backend of a cache bin via $settings['cache'] in settings.php for sites running on a single server, with a PHP installation that has APCu enabled, and that do not use Drush or other command line scripts.
 
 {: .warning }
-This references single-server sites not needing Drush.  TODO: I couldn't find any references to using APCu with multi-server setups so I'm not sure if that is a safe configuration. 
+This references single-server sites not needing Drush.  TODO: I couldn't find any references to using APCu with multi-server setups so I'm not sure if that is a safe configuration.
 
 A cache.backend.chainedfast service that combines APCu availability detection, APCu front caching, and cross-server / cross-process consistency management via chaining to a secondary backend (either the database or whatever is configured for $settings['cache']['default']).
 
@@ -670,10 +848,10 @@ The bins set to use cache.backend.chainedfast will use APCu as the front cache t
 **For site administrators of single-server sites that don't need Drush or other CLI access**
 
 {: .warning }
-This references single-server sites not needing Drush.  TODO: I couldn't find any references to using APCu with multi-server setups so I'm not sure if that is a safe configuration. 
+This references single-server sites not needing Drush.  TODO: I couldn't find any references to using APCu with multi-server setups so I'm not sure if that is a safe configuration.
 
 Pantheon docs ask in their FAQ Can APCu be used as a cache backend on Pantheon?
-Yes, APCu can be used as a cache backend or a "key-value store"; however, this is not recommended. APCu lacks the ability to span multiple application containers. Instead, Pantheon provides a Redis-based Object Cache as a caching backend for Drupal and WordPress, which has coherence across multiple application containers. This was from [Pantheon docs](https://docs.pantheon.io/apcu) FAQ's: 
+Yes, APCu can be used as a cache backend or a "key-value store"; however, this is not recommended. APCu lacks the ability to span multiple application containers. Instead, Pantheon provides a Redis-based Object Cache as a caching backend for Drupal and WordPress, which has coherence across multiple application containers. This was from [Pantheon docs](https://docs.pantheon.io/apcu) FAQ's:
 
 You can optimize further by using APCu exclusively for certain bins, like so:
 
@@ -683,7 +861,7 @@ $settings['cache']['bins']['config'] = 'cache.backend.apcu';
 $settings['cache']['bins']['discovery'] = 'cache.backend.apcu';
 ```
 
-**For site administrators wanting a different front cache than APCu** 
+**For site administrators wanting a different front cache than APCu**
 
 You can copy the cache.backend.chainedfast service definition from core.services.yml to sites/default/services.yml and add arguments to it. For example:
 
@@ -700,15 +878,17 @@ services:
 
 ## Reference
 
-* Drupal: cache tags for all, regardles of your backend From Matt Glaman 22, August 2022 <https://mglaman.dev/blog/drupal-cache-tags-all-regardless-your-backend>
-* Debugging your render cacheable metadata in Drupal From Matt Glaman 14, February 2023 <https://mglaman.dev/blog/debugging-your-render-cacheable-metadata-drupal>
-* Cache contexts overview on drupal.org <https://www.drupal.org/docs/drupal-apis/cache-api/cache-contexts>
-* Caching in Drupal 8 a quick overview of Cache tags, cache context and cache max-age with simple examples <https://zu.com/articles/caching-drupal-8>
-* Nedcamp video on caching by Kelly Lucas from November 2018 <https://www.youtube.com/watch?v=QCZe2K13bd0&list=PLgfWMnl57dv5KmHaK4AngrQAryjO_ylaM&t=0s&index=16>
-* #! code: Drupal 9: Debugging Cache Problems With The Cache Review Module, September 2022 <https://www.hashbangcode.com/article/drupal-9-debugging-cache-problems-cache-review-module>
-* #! code: Drupal 9: Using The Caching API To Store Data, April 2022 <https://www.hashbangcode.com/article/drupal-9-using-caching-api-store-data>
-* #! code: Drupal 8: Custom Cache Bin, September 2019 <https://www.hashbangcode.com/article/drupal-8-custom-cache-bins>
-* New cache backend configuration order, per-bin default before default configuration (How to specify cache backend), June 2016 <https://www.drupal.org/node/2754947>
+* [Drupal: cache tags for all, regardles of your backend From Matt Glaman 22, August 2022](https://mglaman.dev/blog/drupal-cache-tags-all-regardless-your-backend)
+* [Debugging your render cacheable metadata in Drupal From Matt Glaman 14, February 2023](https://mglaman.dev/blog/debugging-your-render-cacheable-metadata-drupal)
+* [Cache contexts overview on drupal.org](https://www.drupal.org/docs/drupal-apis/cache-api/cache-contexts)
+* [Caching in Drupal 8 a quick overview of Cache tags, cache context and cache max-age with simple examples](https://zu.com/articles/caching-drupal-8)
+* [Nedcamp video on caching by Kelly Lucas from November 2018](https://www.youtube.com/watch?v=QCZe2K13bd0&list=PLgfWMnl57dv5KmHaK4AngrQAryjO_ylaM&t=0s&index=16)
+* [#! code: Drupal 9: Debugging Cache Problems With The Cache Review Module, September 2022](https://www.hashbangcode.com/article/drupal-9-debugging-cache-problems-cache-review-module)
+* [#! code: Drupal 9: Using The Caching API To Store Data, April 2022](https://www.hashbangcode.com/article/drupal-9-using-caching-api-store-data)
+* [#! code: Drupal 8: Custom Cache Bin, September 2019](https://www.hashbangcode.com/article/drupal-8-custom-cache-bins)
+* [New cache backend configuration order, per-bin default before default configuration (How to specify cache backend), June 2016)( https://www.drupal.org/node/2754947)
 * [Cache API Drupal Core](https://api.drupal.org/api/drupal/core!core.api.php/group/cache/10.1.x)
+* [Drupal BigPipe Module: The Phenomenal to Improve Website Performance](https://www.lnwebworks.com/Insight/drupal-bigpipe-module)
+* [Drupal performance — a complete Drupal self-help guide to ensuring your website’s performance by Kristen Pol Sep 2023](https://salsa.digital/insights/drupal-performance-a-complete-drupal-self-help-guide-to-ensuring-your-websites-performance)
 
 

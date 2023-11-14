@@ -1,6 +1,5 @@
 # Blocks
 
-
 Blocks are plugins, which are reusable pieces of code following design patterns. Plugins are also used to define views arguments, field formatters, field widgets, etc. The source files for blocks are found in each module's `/src/Plugin` directory.
 
 ![Location of block source files](resources/image-block-location.png)
@@ -328,7 +327,6 @@ public function build() {
   ];
 }
 ```
-TODO: NEED A BETTER EXAMPLE OF A D.I. BLOCK HERE especially showing a build()
 
 ## Create a block with an entityQuery
 
@@ -429,7 +427,7 @@ public static function create(ContainerInterface $container, array $configuratio
 }
 ```
 
-Here is the constructor: 
+Here is the constructor:
 
 ```php
 public function __construct(array $configuration, $plugin_id, $plugin_definition, ConfigFactoryInterface $config_factory, FormBuilderInterface $form_builder) {
@@ -753,7 +751,7 @@ class QuickPivotSubscribeBlock extends BlockBase implements ContainerFactoryPlug
 }
 ```
 
-And here is the routing file:  `docroot/modules/custom/quick_pivot/quick_pivot.routing.yml` 
+And here is the routing file:  `docroot/modules/custom/quick_pivot/quick_pivot.routing.yml`
 
 ```yaml
 quick_pivot.config:
@@ -796,7 +794,7 @@ There is a comment that may be worth exploring at https://api.drupal.org/api/dru
 
 To alter the block content you must add a `#pre_render` in the `hook_block_view_alter` hook.
 
-In <https://drupal.stackexchange.com/a/215948> there is an example which fills in the `$build['#pre_render'][]` array with a string. 
+In <https://drupal.stackexchange.com/a/215948> there is an example which fills in the `$build['#pre_render'][]` array with a string.
 
 In an example on that stackexchange site, this function is provided:
 
@@ -1088,8 +1086,7 @@ While it is possible for blocks to talk to the router, you can't always count th
  */
 ```
 
-This causes the block to be available only on various node pages (view, 
-edit etc.). This can be changed:
+This causes the block to be available only on various node pages (view, edit etc.). This can be changed:
 
 ```php
  *   context_definitions = {
@@ -1156,4 +1153,3 @@ return AccessResult::forbidden();
 return AccessResult::allowed();
 return AccessResult::allowedIf(TRUE);
 ```
-
