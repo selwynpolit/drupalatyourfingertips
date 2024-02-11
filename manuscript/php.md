@@ -1,10 +1,4 @@
----
-title: PHP tips
----
-
 # PHP
-
-## Overview
 
 ## Foreach with ampersand (\&)
 When iterating through an array of items, changes you make to the `as` value are not reflected in the original array.  e.g. if you iterate through your array as in `foreach ($cars as $car)` any changes to `$car` will not be reflected in `$cars`.

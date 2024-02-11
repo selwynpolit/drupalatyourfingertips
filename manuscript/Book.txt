@@ -27,6 +27,7 @@ queries.md
 redirects.md
 render.md
 routes.md
+setup_mac.md
 services.md
 state.md
 taxonomy.md
