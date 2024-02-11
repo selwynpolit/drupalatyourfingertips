@@ -566,7 +566,7 @@ You can set up PhpStorm to automatically look at your code and warn you of lines
 
 Go to: Settings, Php, Quality Tools, PHP_CodeSniffer
 
-![Image of PHP Codesniffer settings](images/phpstorm_codesniffer.png)
+![Image of PHP Codesniffer settings](images/phpstorm-cs1.png)
 
 Use the following settings:
 - Configuration: `System PHP`
