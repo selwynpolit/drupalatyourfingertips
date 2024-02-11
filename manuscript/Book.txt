@@ -22,6 +22,7 @@ migrate.md
 modals.md
 nodes_n_fields.md
 off_the_island.md
+php.md
 queries.md
 redirects.md
 render.md
