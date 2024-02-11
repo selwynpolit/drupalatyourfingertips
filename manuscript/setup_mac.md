@@ -566,7 +566,7 @@ You can set up PhpStorm to automatically look at your code and warn you of lines
 
 Go to: Settings, Php, Quality Tools, PHP_CodeSniffer
 
-![Image of PHP Codesniffer settings](/images/phpstorm-cs1.png)
+![PHP Codesniffer settings](resources/phpstorm-cs1.png)
 
 Use the following settings:
 - Configuration: `System PHP`
@@ -580,7 +580,7 @@ Use the following settings:
     - After checking `installed standards path` and providing the path above, it seems you must uncheck `installed standards path` for this to keep working. I know, weird, right?
     - If you installed the coder module in your project: Under the ... button (on the right side of the screen next to `Show ignored files`), set the PHP_CodeSniffer path to: `/Users/spolit/Sites/tea/vendor/bin/phpcs` and the Path to phpcbf to `/Users/spolit/Sites/tea/vendor/bin/phpcbf`.
 
-![](/images/PHPStorm_PHP_Codesniffer_settings.png)
+![](resources/PHPStorm_PHP_Codesniffer_settings.png)
 
 
 - **If you have phpcs installed globally** (with `composer global require drupal/coder`):
@@ -589,7 +589,7 @@ Use the following settings:
     - After checking `installed standards path` and providing the path above, it seems you must uncheck `installed standards path` for this to keep working. I know, weird, right?
     - If you have installed phpcs and coder globally, Under the ... button (on the right side of the screen next to `Show ignored files`), set the PHP_CodeSniffer path to: `/Users/spolit/.composer/vendor/bin/phpcs` and the Path to phpcbf to `/Users/spolit/.composer/vendor/bin/phpcbf`.
 
-![](/images/PHPStorm_PHP_Codesniffer_settings.png)
+![](/resource/PHPStorm_PHP_Codesniffer_settings.png)
 
 
 ::: tip Note
@@ -605,7 +605,7 @@ phpcs: ERROR: Referenced sniff "SlevomatCodingStandard.ControlStructures.Require
 Run "phpcs --help" for usage information 
 ```
 
-![Error messages in PHPStorm](/images/PHPStorm_codesniffer_errors.png)
+![Error messages in PHPStorm](resource/PHPStorm_codesniffer_errors.png)
 
 
 
