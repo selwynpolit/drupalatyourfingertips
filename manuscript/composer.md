@@ -53,7 +53,6 @@ index 3ea93fc..039f7f9 100644
  entity.file.add_form:
    route_name: entity.file.add_form
    base_route: entity.file.add_form
-
 ```
 
 Create the patch
@@ -62,8 +61,7 @@ Create the patch
 git diff >file_entity_disable_file_menu_tab.patch
 ```
 
-Add the patch to the patches section of composer.json. Notice below the
-line starting with \"drupal/file_entity\":
+Add the patch to the patches section of composer.json. Notice below the line starting with \"drupal/file_entity\" is the local file patch:
 
 ```json
 "patches": {
@@ -101,7 +99,7 @@ patch -p1 < ./patches/fix_scary_module.patch
 
 Patches can be applied by referencing them in the composer.json file, in the following format. [cweagans/composer-patches](https://github.com/cweagans/composer-patches) can then be used to apply the patches on any subsequent website builds.
 
-In order to install and manage patches using composer we need to require the "composer-patches" module: 
+In order to install and manage patches using composer we need to require the "composer-patches" module:
 
 ```
 composer require cweagans/composer-patches
@@ -143,16 +141,13 @@ Some developers like adding the actual link to the issue in the description like
       },
 ```
 
-
 See [Drupal 9 and Composer Patches](https://vazcell.com/blog/how-apply-patch-drupal-9-composer)
 also [Managing patches with Composer](https://acquia.my.site.com/s/article/360048081193-Managing-patches-with-Composer)
 
-
-
-### Step by step 
+### Step by step
 
 1. Find the issue and patch in the issue queue on Drupal.org
-2. Use the title and ID of the issue to be able to locate this post in the future. E.g. [Using an issue for the Gin admin theme](https://www.drupal.org/project/gin/issues/3188521) "Improve content form detection - 3188521" 
+2. Use the title and ID of the issue to be able to locate this post in the future. E.g. [Using an issue for the Gin admin theme](https://www.drupal.org/project/gin/issues/3188521) "Improve content form detection - 3188521"
 3. Scroll down the issue to find the specific patch you want to apply e.g. for comment #8 grab the file link for `3188521-8.patch`.  It is [https://www.drupal.org/files/issues/2021-05-19/3188521-8.patch](https://www.drupal.org/files/issues/2021-05-19/3188521-8.patch)
 4. Add the module name, description and URL for the patch into the extra patches section of json:
 
@@ -171,8 +166,7 @@ also [Managing patches with Composer](https://acquia.my.site.com/s/article/36004
 ```
 5. use `composer update --lock` to apply the patch and watch the output.
 
-
-If the patch was not applied or throws an error which is quite common (because they are no longer compatible), try using `-vvv` (verbose mode) flag with composer to see the reason: 
+If the patch was not applied or throws an error which is quite common (because they are no longer compatible), try using `-vvv` (verbose mode) flag with composer to see the reason:
 
 ```
 composer update -vvv
@@ -185,7 +179,6 @@ Using the URL of the merge request, add .patch at the end of the URL and that wi
 e.g. for a merge request at [https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2](https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2) or [https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2/diffs?view=parallel](https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2/diffs?view=parallel)
 
 The patch is at [https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2.patch](https://git.drupalcode.org/project/alt_stream_wrappers/-/merge_requests/2.patch)
-
 
 
 ## composer.json patches in separate file
@@ -243,13 +236,12 @@ Then composer install will apply the patch correctly
 
 More at <https://github.com/cweagans/composer-patches/issues/146>
 
-
 ## Stop files being overwritten during composer operations
 
 Depending on your composer.json, files like development.services.yml may be overwritten from during scaffolding. To prevent certain scaffold files from being overwritten every time you run a Composer command you can specify them in the "extra" section of your project's composer.json. See the docs on Excluding scaffold files.
 
 The following snippet prevents the development.services.yml from being regularly overwritten:
-```
+```json
 "drupal-scaffold": {
     "locations": {
         "web-root": "web/"
@@ -263,7 +255,7 @@ The code above is from <https://www.drupal.org/docs/develop/development-tools/di
 
 and from <https://www.drupal.org/docs/develop/using-composer/using-drupals-composer-scaffold#toc_6>: Sometimes, a project might prefer to entirely replace a scaffold file provided by a dependency, and receive no further updates for it. This can be done by setting the value for the scaffold file to exclude to false.  In the example below, three files are excluded from being overwritten:
 
-```
+```json
   "name": "my/project",
   ...
   "extra": {
@@ -283,22 +275,50 @@ and from <https://www.drupal.org/docs/develop/using-composer/using-drupals-compo
 More at <https://drupal.stackexchange.com/questions/290989/composer-keeps-overwriting-htaccess-and-other-files-every-time-i-do-anything>
 
 
-
 ## Updating Drupal Core
 
 if there is `drupal/core-recommended` in your `composer.json` use:
 
 ```sh
-$ composer update drupal/core-recommended -W
+composer update drupal/core-recommended -W
 ```
 
 if there is no `drupal/core-recommended` in your `composer.json` use:
 
 ```sh
-$ composer update drupal/core -W
+composer update drupal/core -W
 ```
 
 Note `composer update -W` is the same as `composer update --with-dependencies`
+
+## What are the dependencies?
+
+To check why a project is included use `composer why` or `composer depends`.
+
+```sh
+composer why enyo/dropzone
+drupal/recommended-project dev-master requires enyo/dropzone (^5.9)
+```
+
+Or
+```sh
+composer why drupal/tamper
+drupal/recommended-project dev-master  requires drupal/tamper (^1.0@alpha)
+drupal/feeds_tamper        2.0.0-beta3 requires drupal/tamper (^1.0-alpha3)
+```
+
+You can also see a recursive tree of why the package is depended upon:
+
+```sh
+composer depends drupal/tamper -t
+drupal/tamper 1.0.0-alpha4 Generic plugin to modify data.
+├──drupal/recommended-project dev-master (requires drupal/tamper ^1.0@alpha)
+└──drupal/feeds_tamper 2.0.0-beta3 (requires drupal/tamper ^1.0-alpha3)
+   └──drupal/recommended-project dev-master (requires drupal/feeds_tamper ^2.0@beta)
+```
+
+See [more about composer why/depends](https://getcomposer.org/doc/03-cli.md#depends-why)
+See [also this explanation of why-not](https://getcomposer.org/doc/03-cli.md#prohibits-why-not)
 
 ## Test composer (dry run)
 
@@ -316,6 +336,285 @@ Package operations: 0 installs, 4 updates, 0 removals
   - Updating drupal/core-recommended (8.8.2) to drupal/core-recommended (8.8.4)
   - Updating drupal/crop (1.5.0) to drupal/crop (2.0.0)
 ```
+
+## Add a module that isn't currently supported in your version of drupal
+
+### For Drupal 9
+Install the lenient endpoint:
+
+
+`composer config repositories.lenient composer https://packages.drupal.org/lenient `
+
+Your `composer.json` file will get this. notice the `lenient` key below:
+
+```json
+    "repositories": {
+        "lenient": {
+            "type": "composer",
+            "url": "https://packages.drupal.org/lenient"
+        },
+        "0": {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    },
+```
+
+Specify which Drupal module that composer should be lenient with:
+
+`composer config --merge --json extra.drupal-lenient.allowed-list '["drupal/node_access_rebuild_progressive"]'`
+
+And `composer.json` gets this added:
+
+```json
+    "drupal-lenient": {
+        "allowed-list": ["drupal/node_access_rebuild_progressive"]
+    }
+```
+
+If you haven't already installed the [cweagans composer patches plugin](https://github.com/cweagans/composer-patches) use:
+
+```
+composer require cweagans/composer-patches
+```
+
+Create the patch file `patches/node_access_rebuild_progressive_d10.patch` with the following contents.  It is on [drupal.org](https://www.drupal.org/project/node_access_rebuild_progressive/issues/3288770#comment-15227586).
+
+```diff
+diff --git docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.info.yml docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.info.yml
+index 1a0e13eec..f322ff847 100644
+--- docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.info.yml
++++ docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.info.yml
+@@ -1,7 +1,7 @@
+ name: 'Node Access Rebuild Progressive'
+ description: 'Rebuild node access grants in chunks'
+ type: module
+-core_version_requirement: ^8 || ^9
++core_version_requirement: ^9.4 || ^10
+ 
+ # Information added by Drupal.org packaging script on 2020-06-23
+ version: '2.0.0'
+diff --git docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.module docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.module
+index 45f7c8a41..d2fc50637 100644
+--- docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.module
++++ docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.module
+@@ -36,7 +36,7 @@ function node_access_rebuild_progressive_trigger() {
+   node_access_needs_rebuild(FALSE);
+   // Add default grants in the unlikely case
+   // no modules implement node_grants anymore.
+-  if (!count(\Drupal::moduleHandler()->getImplementations('node_grants'))) {
++  if (!count(\Drupal::moduleHandler()->hasImplementations('node_grants'))) {
+     node_access_rebuild_progressive_set_default();
+     return node_access_rebuild_progressive_finished();
+   }
+
+```
+
+In composer.json add your patch as in below.  It is on [drupal.org](https://www.drupal.org/project/node_access_rebuild_progressive/issues/3288770#comment-15227586).
+
+```json
+    "extra": {
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "docroot/"
+            },
+            "file-mapping": {
+                "[web-root]/sites/development.services.yml": false
+            }
+        },
+        "installer-paths": {
+            "docroot/core": [
+                "type:drupal-core"
+            ],
+            "docroot/libraries/{$name}": [
+                "type:drupal-library"
+            ],
+            "docroot/modules/contrib/{$name}": [
+                "type:drupal-module"
+            ],
+            "docroot/profiles/contrib/{$name}": [
+                "type:drupal-profile"
+            ],
+            "docroot/themes/contrib/{$name}": [
+                "type:drupal-theme"
+            ],
+            "drush/Commands/contrib/{$name}": [
+                "type:drupal-drush"
+            ],
+            "docroot/modules/custom/{$name}": [
+                "type:drupal-custom-module"
+            ],
+            "docroot/profiles/custom/{$name}": [
+                "type:drupal-custom-profile"
+            ],
+            "docroot/themes/custom/{$name}": [
+                "type:drupal-custom-theme"
+            ]
+        },
+        "patches": {
+            "drupal/node_access_rebuild_progressive": {
+                "Automated Drupal 10 compatibility fixes - 3288770": "patches/node_access_rebuild_progressive_d10.patch"
+            }
+        },
+
+```
+
+Install the module with:
+
+`composer require drupal/node_access_rebuild_progressive`
+
+The module will be installed and the patch applied!
+
+More at
+- [Using Drupal's Lenient Composer Endpoint - Sep 2023](https://www.drupal.org/docs/develop/using-composer/using-drupals-lenient-composer-endpoint)
+- [Install a Contributed Module with No Drupal 9 Release - Feb 2023](https://drupalize.me/tutorial/install-contributed-module-no-drupal-9-release)
+
+
+### For Drupal 10:
+
+Install the composer lenient plugin
+`composer require mglaman/composer-drupal-lenient`
+
+This makes `composer.json` look like this:
+
+Notice the `require` key and the `config` key below
+```json
+    "require": {
+        "acquia/memcache-settings": "^1.2",
+        ...
+        "mglaman/composer-drupal-lenient": "^1.0"
+    },
+    "conflict": {
+        "drupal/drupal": "*"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "drupal/core-composer-scaffold": true,
+            "drupal/core-project-message": true,
+            "phpstan/extension-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "php-http/discovery": true,
+            "cweagans/composer-patches": true,
+            "mglaman/composer-drupal-lenient": true
+        },
+    },
+```
+
+Specify which Drupal module that composer should be lenient with:
+
+```
+composer config --merge --json extra.drupal-lenient.allowed-list '["drupal/node_access_rebuild_progressive"]'
+```
+And `composer.json` gets this added:
+
+```json
+        "drupal-lenient": {
+            "allowed-list": ["drupal/node_access_rebuild_progressive"]
+        }
+```
+
+If you haven't already installed the [cweagans composer patches plugin](https://github.com/cweagans/composer-patches) use:
+
+```
+composer require cweagans/composer-patches
+```
+
+Create the patch file `patches/node_access_rebuild_progressive_d10.patch` with the following contents.  It is on [drupal.org](https://www.drupal.org/project/node_access_rebuild_progressive/issues/3288770#comment-15227586).
+
+```diff
+diff --git docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.info.yml docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.info.yml
+index 1a0e13eec..f322ff847 100644
+--- docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.info.yml
++++ docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.info.yml
+@@ -1,7 +1,7 @@
+ name: 'Node Access Rebuild Progressive'
+ description: 'Rebuild node access grants in chunks'
+ type: module
+-core_version_requirement: ^8 || ^9
++core_version_requirement: ^9.4 || ^10
+ 
+ # Information added by Drupal.org packaging script on 2020-06-23
+ version: '2.0.0'
+diff --git docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.module docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.module
+index 45f7c8a41..d2fc50637 100644
+--- docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.module
++++ docroot/modules/contrib/node_access_rebuild_progressive/node_access_rebuild_progressive.module
+@@ -36,7 +36,7 @@ function node_access_rebuild_progressive_trigger() {
+   node_access_needs_rebuild(FALSE);
+   // Add default grants in the unlikely case
+   // no modules implement node_grants anymore.
+-  if (!count(\Drupal::moduleHandler()->getImplementations('node_grants'))) {
++  if (!count(\Drupal::moduleHandler()->hasImplementations('node_grants'))) {
+     node_access_rebuild_progressive_set_default();
+     return node_access_rebuild_progressive_finished();
+   }
+
+```
+
+In composer.json add your patch as shown below.
+
+```json
+    "extra": {
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "docroot/"
+            },
+            "file-mapping": {
+                "[web-root]/sites/development.services.yml": false
+            }
+        },
+        "installer-paths": {
+            "docroot/core": [
+                "type:drupal-core"
+            ],
+            "docroot/libraries/{$name}": [
+                "type:drupal-library"
+            ],
+            "docroot/modules/contrib/{$name}": [
+                "type:drupal-module"
+            ],
+            "docroot/profiles/contrib/{$name}": [
+                "type:drupal-profile"
+            ],
+            "docroot/themes/contrib/{$name}": [
+                "type:drupal-theme"
+            ],
+            "drush/Commands/contrib/{$name}": [
+                "type:drupal-drush"
+            ],
+            "docroot/modules/custom/{$name}": [
+                "type:drupal-custom-module"
+            ],
+            "docroot/profiles/custom/{$name}": [
+                "type:drupal-custom-profile"
+            ],
+            "docroot/themes/custom/{$name}": [
+                "type:drupal-custom-theme"
+            ]
+        },
+        "patches": {
+            "drupal/node_access_rebuild_progressive": {
+                "Automated Drupal 10 compatibility fixes - 3288770": "patches/node_access_rebuild_progressive_d10.patch"
+            }
+        },
+
+```
+
+Install the module with:
+
+`composer require drupal/node_access_rebuild_progressive`
+
+The module will be installed and the patch applied!
+
+More at
+- [HOW TO INCORPORATE DRUPAL 9-COMPATIBLE MODULES INTO YOUR DRUPAL 10 PROJECT - Aug 2023](https://www.specbee.com/blogs/how-incorporate-drupal-9-compatible-modules-your-drupal-10-project)
+- [https://github.com/mglaman/composer-drupal-lenient](https://github.com/mglaman/composer-drupal-lenient)
+- [Using Drupal's Lenient Composer Endpoint - Sep 2023](https://www.drupal.org/docs/develop/using-composer/using-drupals-lenient-composer-endpoint)
+- [Install a Contributed Module with No Drupal 9 Release - Feb 2023](https://drupalize.me/tutorial/install-contributed-module-no-drupal-9-release)
+
 
 ## Version constraints
 
@@ -348,6 +647,7 @@ Note: Be careful when using unbounded ranges as you might end up
 unexpectedly installing versions that break backwards compatibility.
 Consider using the caret operator instead for safety.
 
+
 Examples:
 
 - \>=1.0
@@ -360,7 +660,7 @@ More at <https://getcomposer.org/doc/articles/versions.md>
 
 ## Allowing multiple versions
 
-You can use double pipe (`||`) to specify multiple version. 
+You can use double pipe (`||`) to specify multiple version.
 
 For the [CSV serialization](https://www.drupal.org/project/csv_serialization) module the author recommends using the following to install the module:
 ```
@@ -369,9 +669,40 @@ composer require drupal/csv_serialization:^2.0 || ^3.0
 
 They say: \"It is not possible to support both Drupal 9.x and 10.x in a single release of this module due to a breaking change in EncoderInterface::encode() between Symfony 4.4 (D9) and Symfony 6.2 (D10). When preparing for an upgrade to Drupal 10 we recommend that you widen your Composer version constraints to allow either 2.x or 3.x: `composer require drupal/csv_serialization:^2.0 || ^3.0.` This will allow the module to be automatically upgraded when you upgrade Drupal core.\"
 
+>TODO: I couldn't make this work.  Anyone want to weigh in on this?
 
+## Specify a particular version of PHP
 
+You can specify the version of PHP in composer.json as shown below:
 
+```json
+"config": {
+
+    "platform": {
+        "php": "8.1"
+    }
+
+},
+```
+
+Here is more of the config section of a composer.json for clarity:
+
+```json
+    "config": {
+        "platform": {
+            "php": "8.1"
+        },
+        "allow-plugins": {
+            "composer/installers": true,
+            "drupal/core-composer-scaffold": true,
+            "drupal/core-project-message": true,
+            "phpstan/extension-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "php-http/discovery": true
+        },
+        "sort-packages": true
+    },
+```
 
 ## Troubleshooting
 
@@ -416,22 +747,6 @@ $ ddev composer install
 - [Using Drupal's Composer Scaffold updated Dec 2022](https://www.drupal.org/docs/develop/using-composer/using-drupals-composer-scaffold#toc_6)
 - [Drupal 9 and Composer Patches by Adrian Vazquez Peligero June 2021](https://vazcell.com/blog/how-apply-patch-drupal-9-composer)
 - [Managing patches with Composer March 2022](https://acquia.my.site.com/s/article/360048081193-Managing-patches-with-Composer)
-
-
----
-
-<script src="https://giscus.app/client.js"
-        data-repo="selwynpolit/d9book"
-        data-repo-id="MDEwOlJlcG9zaXRvcnkzMjUxNTQ1Nzg="
-        data-category="Q&A"
-        data-category-id="MDE4OkRpc2N1c3Npb25DYXRlZ29yeTMyMjY2NDE4"
-        data-mapping="title"
-        data-strict="0"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-input-position="bottom"
-        data-theme="preferred_color_scheme"
-        data-lang="en"
-        crossorigin="anonymous"
-        async>
-</script>
+- [Utilizing incompatible Drupal 9 modules with Drupal 10 - Aug 2023 ](https://www.specbee.com/blogs/how-incorporate-drupal-9-compatible-modules-your-drupal-10-project)
+- [Install a Contributed Module with No Drupal 9 Release - Feb 2023](https://drupalize.me/tutorial/install-contributed-module-no-drupal-9-release)
+- [Using Drupal's Lenient Composer Endpoint - Sep 2023](https://www.drupal.org/docs/develop/using-composer/using-drupals-lenient-composer-endpoint)
